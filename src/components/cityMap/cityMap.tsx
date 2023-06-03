@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import "./cityMap.scss";
 import Map from "ol/Map.js";
 import OSM from "ol/source/OSM.js";
@@ -7,10 +7,15 @@ import WMTSSource from "ol/source/WMTS";
 import View from "ol/View.js";
 import WMTSTileGrid from "ol/tilegrid/WMTS.js";
 import Projection from "ol/proj/Projection";
-import { getTopLeft, getWidth } from "ol/extent.js";
+import { getTopLeft } from "ol/extent.js";
 import { register } from "ol/proj/proj4.js";
 import { fromLonLat } from "ol/proj";
 import proj4 from "proj4";
+import GeoJSON from 'ol/format/GeoJSON.js';
+import VectorSource from 'ol/source/Vector.js';
+import XYZ from 'ol/source/XYZ.js';
+import { Vector as VectorLayer} from 'ol/layer.js';
+import {bbox as bboxStrategy} from 'ol/loadingstrategy.js';
 
 function CityMap() {
   const ref = useRef<HTMLDivElement>(null);
@@ -28,8 +33,6 @@ function CityMap() {
     extent: [-285401.92, 22598.08, 595401.92, 903401.92],
   });
 
-  // can be calculated based on resolution z0, written out for clarity
-  // see https://www.geonovum.nl/uploads/standards/downloads/nederlandse_richtlijn_tiling_-_versie_1.1.pdf
   const resolutions = [
     3440.64, 1720.32, 860.16, 430.08, 215.04, 107.52, 53.76, 26.88, 13.44, 6.72,
     3.36, 1.68, 0.84, 0.42, 0.21,
@@ -41,13 +44,35 @@ function CityMap() {
 
   useEffect(() => {
     if (ref.current && !mapRef.current) {
+      const vectorSource = new VectorSource({
+        format: new GeoJSON(),
+        url: function (extent) {
+          return (
+            'https://service.pdok.nl/rvo/beschermdegebieden/wetlands/wfs/v1_0?request=GetCapabilities&service=WFS&' +
+            'version=1.1.0&request=GetFeature&typename=osm:water_areas&' +
+            'outputFormat=application/json&srsname=EPSG:28992&' +
+            'bbox=' +
+            extent.join(',') +
+            ',EPSG:28992'
+          );
+        },
+        strategy: bboxStrategy,
+      });
+      const vector = new VectorLayer({
+        source: vectorSource,
+        style: {
+          'stroke-width': 0.75,
+          'stroke-color': 'white',
+          'fill-color': 'rgba(100,100,100,0.7)',
+        },
+      });
       mapRef.current = new Map({
         target: ref.current,
         layers: [
           new TileLayer({
             source: new OSM(),
           }),
-      
+          vector,
           new TileLayer<any>({
             // @ts-ignore 
             type: "base",
