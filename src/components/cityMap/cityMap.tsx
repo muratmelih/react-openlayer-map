@@ -16,7 +16,7 @@ function CityMap() {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const BRTA_ATTRIBUTION =
-    'Kaartgegevens: © <a href="http://www.cbs.nl">CBS</a>, <a href="http://www.kadaster.nl">Kadaster</a>, <a href="http://openstreetmap.org">OpenStreetMap</a><span class="printhide">-auteurs (<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>).</span>';
+    'NL Map';
 
   proj4.defs(
     "EPSG:28992",
@@ -44,10 +44,15 @@ function CityMap() {
       mapRef.current = new Map({
         target: ref.current,
         layers: [
+          new TileLayer({
+            source: new OSM(),
+          }),
+      
           new TileLayer<any>({
             // @ts-ignore 
             type: "base",
             title: `standaard WMTS`,
+            opacity:1,
             // @ts-ignore 
             extent: rdProjection.extent,
             source: new WMTSSource({
