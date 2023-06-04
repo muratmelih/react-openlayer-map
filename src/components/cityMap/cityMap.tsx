@@ -7,16 +7,44 @@ import WMTSSource from "ol/source/WMTS";
 import View from "ol/View.js";
 import WMTSTileGrid from "ol/tilegrid/WMTS.js";
 import Projection from "ol/proj/Projection";
-import { getTopLeft, getWidth } from "ol/extent.js";
+import { getTopLeft } from "ol/extent.js";
 import { register } from "ol/proj/proj4.js";
 import { fromLonLat } from "ol/proj";
 import proj4 from "proj4";
+import GeoJSON from "ol/format/GeoJSON.js";
+import VectorSource from "ol/source/Vector.js";
+import { Vector as VectorLayer } from "ol/layer.js";
+import { bbox as bboxStrategy } from "ol/loadingstrategy.js";
 
 function CityMap() {
+  const [wetlandsChecked, setWetlandsChecked] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
-  const BRTA_ATTRIBUTION =
-    'NL Map';
+  const BRTA_ATTRIBUTION = "NL Map";
+
+  const wetlandsLayerSource = new VectorSource({
+    format: new GeoJSON(),
+    url: function (extent) {
+      return (
+        "https://service.pdok.nl/rvo/beschermdegebieden/wetlands/wfs/v1_0?" +
+        "service=WFS&" +
+        "request=GetFeature&" +
+        "VERSION=2.0.0&" +
+        "typeNames=beschermdegebieden:protectedsite&" +
+        "outputFormat=application/json"
+      );
+    },
+    strategy: bboxStrategy,
+  });
+  const wetlandsLayer = new VectorLayer({
+    source: wetlandsLayerSource,
+    className: "wetlands-layer",
+    style: {
+      "stroke-width": 0.75,
+      "stroke-color": "white",
+      "fill-color": "rgba(100,100,100,0.7)",
+    },
+  });
 
   proj4.defs(
     "EPSG:28992",
@@ -28,8 +56,6 @@ function CityMap() {
     extent: [-285401.92, 22598.08, 595401.92, 903401.92],
   });
 
-  // can be calculated based on resolution z0, written out for clarity
-  // see https://www.geonovum.nl/uploads/standards/downloads/nederlandse_richtlijn_tiling_-_versie_1.1.pdf
   const resolutions = [
     3440.64, 1720.32, 860.16, 430.08, 215.04, 107.52, 53.76, 26.88, 13.44, 6.72,
     3.36, 1.68, 0.84, 0.42, 0.21,
@@ -47,18 +73,17 @@ function CityMap() {
           new TileLayer({
             source: new OSM(),
           }),
-      
           new TileLayer<any>({
-            // @ts-ignore 
+            // @ts-ignore
             type: "base",
             title: `standaard WMTS`,
-            opacity:1,
-            // @ts-ignore 
+            opacity: 1,
+            // @ts-ignore
             extent: rdProjection.extent,
             source: new WMTSSource({
               url: "https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0",
               crossOrigin: "Anonymous",
-              layer: 'standaard',
+              layer: "standaard",
               matrixSet: "EPSG:28992",
               format: "image/png",
               attributions: BRTA_ATTRIBUTION,
@@ -71,6 +96,7 @@ function CityMap() {
               style: "default",
             }),
           }),
+          wetlandsLayer,
         ],
         view: new View({
           center: fromLonLat([5.43, 52.18]),
@@ -79,8 +105,38 @@ function CityMap() {
       });
     }
   }, [ref, mapRef]);
+  useEffect(() => {
+    const layer = mapRef.current
+      ?.getLayers()
+      .getArray()
+      .find((layer) => layer.getClassName() === "wetlands-layer");
+    if (wetlandsChecked) {
+      layer?.setOpacity(1);
+    } else {
+      layer?.setOpacity(0);
+    }
+  }, [wetlandsChecked]);
 
-  return <div ref={ref} className="city-map"></div>;
+  const onCheckboxChange = () => {
+    setWetlandsChecked(!wetlandsChecked);
+  };
+
+  return (
+    <>
+      <div ref={ref} className="city-map"></div>
+      <div className="input-container">
+        <input
+          type="checkbox"
+          id="wetlands-checkbox"
+          name="wetlands-checkbox"
+          value="true"
+          checked={wetlandsChecked}
+          onChange={onCheckboxChange}
+        />
+        <label htmlFor="wetlands-checkbox">Protected Areas - Wetlands</label>
+      </div>
+    </>
+  );
 }
 
 export default CityMap;
