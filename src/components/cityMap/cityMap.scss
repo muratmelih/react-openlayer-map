@@ -6,6 +6,9 @@
 .input-container{
     text-align: center;
     margin-top:10px;
+    -webkit-user-select: none;
+    -ms-user-select: none; 
+    user-select: none; 
     input{
         margin-right:10px;
     }
