@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./cityMap.scss";
 import Map from "ol/Map.js";
-import OSM from "ol/source/OSM.js";
 import TileLayer from "ol/layer/Tile.js";
 import WMTSSource from "ol/source/WMTS";
 import View from "ol/View.js";
@@ -11,40 +10,17 @@ import { getTopLeft } from "ol/extent.js";
 import { register } from "ol/proj/proj4.js";
 import { fromLonLat } from "ol/proj";
 import proj4 from "proj4";
-import GeoJSON from "ol/format/GeoJSON.js";
-import VectorSource from "ol/source/Vector.js";
-import { Vector as VectorLayer } from "ol/layer.js";
-import { bbox as bboxStrategy } from "ol/loadingstrategy.js";
+import { createStringXY } from "ol/coordinate.js";
+import { defaults as defaultControls } from "ol/control.js";
+import MousePosition from "ol/control/MousePosition.js";
+import wetlandsLayer from "../../map-layers/protected-areas-wetlands";
+import LayerChangeCheckbox from "../layer-change-checkbox/layer-change-checkbox";
 
 function CityMap() {
-  const [wetlandsChecked, setWetlandsChecked] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
+  const mousePosRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const BRTA_ATTRIBUTION = "NL Map";
-
-  const wetlandsLayerSource = new VectorSource({
-    format: new GeoJSON(),
-    url: function (extent) {
-      return (
-        "https://service.pdok.nl/rvo/beschermdegebieden/wetlands/wfs/v1_0?" +
-        "service=WFS&" +
-        "request=GetFeature&" +
-        "VERSION=2.0.0&" +
-        "typeNames=beschermdegebieden:protectedsite&" +
-        "outputFormat=application/json"
-      );
-    },
-    strategy: bboxStrategy,
-  });
-  const wetlandsLayer = new VectorLayer({
-    source: wetlandsLayerSource,
-    className: "wetlands-layer",
-    style: {
-      "stroke-width": 0.75,
-      "stroke-color": "white",
-      "fill-color": "rgba(100,100,100,0.7)",
-    },
-  });
 
   proj4.defs(
     "EPSG:28992",
@@ -67,12 +43,16 @@ function CityMap() {
 
   useEffect(() => {
     if (ref.current && !mapRef.current) {
+      const mousePositionControl = new MousePosition({
+        coordinateFormat: createStringXY(4),
+        projection: "EPSG:4326",
+        className: "mouse-position-wrapper",
+        target: mousePosRef.current as any,
+      });
       mapRef.current = new Map({
         target: ref.current,
+        controls: defaultControls().extend([mousePositionControl]),
         layers: [
-          new TileLayer({
-            source: new OSM(),
-          }),
           new TileLayer<any>({
             // @ts-ignore
             type: "base",
@@ -100,40 +80,35 @@ function CityMap() {
         ],
         view: new View({
           center: fromLonLat([5.43, 52.18]),
-          zoom: 8,
+          zoom: 7,
         }),
       });
     }
   }, [ref, mapRef]);
-  useEffect(() => {
+
+  const changeLayerVisibility = (value: boolean, layerClassName: string) => {
     const layer = mapRef.current
       ?.getLayers()
       .getArray()
-      .find((layer) => layer.getClassName() === "wetlands-layer");
-    if (wetlandsChecked) {
+      .find((layer) => layer.getClassName() === layerClassName);
+    if (value) {
       layer?.setOpacity(1);
     } else {
       layer?.setOpacity(0);
     }
-  }, [wetlandsChecked]);
-
-  const onCheckboxChange = () => {
-    setWetlandsChecked(!wetlandsChecked);
   };
 
   return (
     <>
       <div ref={ref} className="city-map"></div>
       <div className="input-container">
-        <input
-          type="checkbox"
-          id="wetlands-checkbox"
-          name="wetlands-checkbox"
-          value="true"
-          checked={wetlandsChecked}
-          onChange={onCheckboxChange}
+        <LayerChangeCheckbox
+          label={"Protected Areas - Wetlands"}
+          layerClassName={"wetlands-layer"}
+          changeLayerVisiblity={changeLayerVisibility}
         />
-        <label htmlFor="wetlands-checkbox">Protected Areas - Wetlands</label>
+        <p>Mouse Coordinates:</p>
+        <div ref={mousePosRef} className="mouse-position-wrapper"></div>
       </div>
     </>
   );
