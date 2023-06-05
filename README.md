@@ -15,8 +15,8 @@ command then run
 
 ## About details
 I used two datasets for map, first one is 
-[**Basisregistratie Topografie Achtergrondkaarten**](https://www.pdok.nl/introductie/-/article/basisregistratie-topografie-achtergrondkaarten-brt-a-) and for a second layer, I used 
-[**Protected Areas - Wetlands**](https://www.pdok.nl/geo-services/-/article/beschermde-gebieden-wetlands-inspire-geharmoniseerd-)
+[**Basisregistratie Topografie Achtergrondkaarten**](https://www.pdok.nl/introductie/-/article/basisregistratie-topografie-achtergrondkaarten-brt-a-) as WMTS service and for a second layer, I used 
+[**Protected Areas - Wetlands**](https://www.pdok.nl/geo-services/-/article/beschermde-gebieden-wetlands-inspire-geharmoniseerd-) as WFS service
 
 
 !! It may take a little time to load for second layer, when loaded, user can set the visibilty of the second layer, and user can see the coordinates of the cursor on the map when hovering.
