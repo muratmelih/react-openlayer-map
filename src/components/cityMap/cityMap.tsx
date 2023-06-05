@@ -15,12 +15,14 @@ import { defaults as defaultControls } from "ol/control.js";
 import MousePosition from "ol/control/MousePosition.js";
 import wetlandsLayer from "../../map-layers/protected-areas-wetlands";
 import LayerChangeCheckbox from "../layer-change-checkbox/layer-change-checkbox";
+import loading from "/assets/loading.gif";
 
 function CityMap() {
   const ref = useRef<HTMLDivElement>(null);
   const mousePosRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const BRTA_ATTRIBUTION = "NL Map";
+  const [loaderClass, setLoaderClass] = useState('visible')
 
   proj4.defs(
     "EPSG:28992",
@@ -43,6 +45,9 @@ function CityMap() {
 
   useEffect(() => {
     if (ref.current && !mapRef.current) {
+      wetlandsLayer.getSource()?.on(["featuresloadend"], function () {
+        setLoaderClass('hidden');
+      });
       const mousePositionControl = new MousePosition({
         coordinateFormat: createStringXY(4),
         projection: "EPSG:4326",
@@ -100,6 +105,9 @@ function CityMap() {
 
   return (
     <>
+      <div className={`loader ${loaderClass}`}>
+        <img src={'/assets/loading.gif'} alt='map-loading'/>
+      </div>
       <div ref={ref} className="city-map"></div>
       <div className="input-container">
         <LayerChangeCheckbox
