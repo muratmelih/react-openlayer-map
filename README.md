@@ -19,13 +19,20 @@ I used two datasets for map, first one is
 [**Protected Areas - Wetlands**](https://www.pdok.nl/geo-services/-/article/beschermde-gebieden-wetlands-inspire-geharmoniseerd-) as WFS service
 
 
-!! It may take a little time to load for second layer, when loaded, user can set the visibilty of the second layer, and user can see the coordinates of the cursor on the map when hovering.
+!! It may take a little time to load for second layer so added a loading screen to complete loading, when loaded, user can set the visibilty of the second layer, and user can see the coordinates of the cursor on the map when hovering.
 
 If you have any questions, please do not hesitate to contact me:
 
 Murat Melih IŞIK
 muratmelihisik@gmail.com
 
+![image](https://github.com/muratmelih/react-openlayer-map/assets/8982629/59b50a2f-0c96-4835-b1d2-6402aef34c58)
+
+
+
+
 ![image](https://github.com/muratmelih/react-openlayer-map/assets/8982629/7c2c2c1f-f3de-426a-99cc-cb216fec271a)
+
+
 
 ![image](https://github.com/muratmelih/react-openlayer-map/assets/8982629/825bf52a-c5e0-4746-ac2f-b9d33b7845c8)
